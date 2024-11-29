@@ -46,21 +46,21 @@ const router = createRouter({
           name: "published_list",
           alias: "", //默认显示用户的文章列表
           component: () => import("../views/MyPubList.vue"),
-        },
-        {
-          path: "collect_list",
-          name: "collect_list",
-          component: () => import("../views/MyPubList.vue"),
+          props: true,
         },
         {
           path: "follower_list",
           name: "follower_list",
           component: () => import("../views/MyFollowList.vue"),
+          props: true,
+          meta: { type: "follower" },
         },
         {
           path: "following_list",
           name: "following_list",
           component: () => import("../views/MyFollowList.vue"),
+          props: true,
+          meta: { type: "following" },
         },
       ],
     },
@@ -73,17 +73,18 @@ const router = createRouter({
     {
       path: "/setting",
       name: "setting",
-      component: HomeView,
+      component: () => import("../views/SettingView.vue"),
       children: [
         {
           path: "profile_modify",
           name: "profile_modify",
-          component: HomeView,
+          alias: "",
+          component: () => import("../views/ProfileMod.vue"),
         },
         {
           path: "pwd_modify",
           name: "pwd_modify",
-          component: HomeView,
+          component: () => import("../views/PwdModView.vue"),
         },
       ],
     },

@@ -6,6 +6,7 @@ import {
   CommonUser,
 } from "@/apis/models";
 import { useRequest } from "@/hooks/useRequest";
+import { useUserStore } from "@/stores/userInfo";
 import {
   StarFilled,
   Star,
@@ -13,7 +14,9 @@ import {
   Orange,
   View,
 } from "@element-plus/icons-vue";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
 const { aid, uid } = defineProps<{
   aid: string;
   uid: string;
@@ -26,6 +29,7 @@ const cmtSubMap = ref<Map<string, Array<CommentComment>>>(new Map());
 const cmtSubMapRelation = ref<Map<string, boolean>>(new Map());
 const cmtDrawerIsOpen = ref(false);
 const uCardMap = ref<Map<string, CommonUser>>(new Map());
+const userStore = useUserStore();
 const openCmtDrawer = () => {
   cmtDrawerIsOpen.value = true;
 };
@@ -207,8 +211,8 @@ onMounted(async () => {
   request.blogServerPublishViewAddPost({ aHashID: aid });
 });
 
-const fetchUser = (uid: string) => {
-  if (uCardMap.value.get(uid)) {
+const fetchUser = (uid: string, force: boolean) => {
+  if (uCardMap.value.get(uid) && !force) {
     return; //避免重复请求
   }
   request.blogServerUserGet(uid).then((res) => {
@@ -217,154 +221,208 @@ const fetchUser = (uid: string) => {
     }
   });
 };
+const delArticle = () => {
+  if (isLoaded) {
+    request.blogServerPublishActionDelete({ aHashID: aid }).then(() => {
+      ElMessage.success("成功删除该文章");
+      router.push("/");
+    });
+  }
+};
+const redToModPage = () => {
+  if (isLoaded) {
+    router.push({
+      path: "/publish/modify",
+      query: { aid: aid, uid: userStore.user.base.hashId },
+    });
+  }
+};
 </script>
 <template>
-  <template v-if="isLoaded">
-    <div
-      class="flex flex-row w-full min-h-screen justify-center gap-4 bg-#f1f5f9 pt-10"
-    >
-      <div class="flex flex-col gap-8 items-center m-6 mt-20">
-        <template v-for="(item, idx) of infos" :key="idx">
-          <el-badge
-            :value="item.count"
-            color="grey"
-            class="scale-125"
-            :offset="[-5, 3]"
-            :max="99"
-          >
-            <el-button
-              :icon="item.icon"
-              size="large"
-              circle
-              :color="item.color"
-              @click="item.onClick"
-            />
-          </el-badge>
-        </template>
-      </div>
-      <div
-        class="flex flex-col items-start gap-4 p-10 w-3/5 bg-white min-h-50 rounded-lg"
-      >
-        <h1 class="text-4xl font-bold">{{ detail.base.preload.title }}</h1>
-        <div class="flex flex-row items-center gap-4">
-          <router-link :to="/user/ + detail.author.base.hashId">{{
-            detail.author.base.name
-          }}</router-link>
-          <div class="flex flex-row items-center">
-            <el-icon> <View /></el-icon>&nbsp; {{ detail.info.viewed_count }}
-          </div>
-        </div>
-        <p class="w-full bg-slate-300 rounded-md min-h-24 p-3">
-          <span class="text-blue-600 italic">小记： </span
-          >{{ detail.base.preload.note }}
-        </p>
-        <QuillEditor
-          theme="bubble"
-          contentType="html"
-          :content="detail.base.content"
-          :readOnly="true"
-        />
-      </div>
-      <div>
-        <user-card
-          :user="detail.author"
-          @click:follow="authorFollow"
-        ></user-card>
-      </div>
-    </div>
-    <el-drawer v-model="cmtDrawerIsOpen" direction="rtl">
-      <template #header>
-        <div
-          class="flex flex-row justify-start items-center p-b-1 border-b-1 border-b-blueGray"
-        >
-          <Comment class="w-7 h-7 mr-4" />
-          <span style="font-size: 25px">评论</span>
-        </div>
-      </template>
-      <template #default>
-        <div class="flex flex-col gap-4 items-start w-full">
-          <comment-input @send="(cmt) => comment(cmt, false)" />
-          <template v-for="(item, idx) of cmtList" :key="idx">
-            <CommentItem
-              :item="item"
-              :uCard="uCardMap.get(item.User.hashId)"
-              :isReply="false"
-              :articleAuthorId="detail.author.base.hashId"
-              @fetch:userCard="() => fetchUser(item.User.hashId)"
-              @post:comment="
-                (cmt) => {
-                  comment(cmt, true, item.CHashId, item.CHashId);
-                  cmtList[idx].ChildNum++;
-                }
-              "
-              @update:cmtFavorite="
-                () => {
-                  cmtFavorite(item).then(() => {
-                    if (cmtList[idx].IsFavorite) {
-                      cmtList[idx].FavoriteCount--;
-                    } else {
-                      cmtList[idx].FavoriteCount++;
-                    }
-                    cmtList[idx].IsFavorite = !cmtList[idx].IsFavorite;
-                  });
-                }
-              "
-            />
-
-            <template v-if="item.ChildNum > 0">
-              <template v-if="cmtSubMapRelation.get(item.CHashId)">
-                <template
-                  v-for="(subItem, idx2) of cmtSubMap.get(item.CHashId)"
-                  :key="idx2"
-                >
-                  <div class="ml-5">
-                    <CommentItem
-                      :item="subItem"
-                      :uCard="uCardMap.get(subItem.User.hashId)"
-                      :isReply="true"
-                      :articleAuthorId="detail.author.base.hashId"
-                      @fetch:userCard="() => fetchUser(subItem.User.hashId)"
-                      @post:comment="
-                        (cmt) =>
-                          comment(cmt, true, subItem.CHashId, item.CHashId)
-                      "
-                      @update:cmtFavorite="
-                        () => {
-                          cmtFavorite(subItem).then(() => {
-                            if (cmtSubMap.get(item.CHashId)[idx2].IsFavorite) {
-                              cmtSubMap.get(item.CHashId)[idx2].FavoriteCount--;
-                            } else {
-                              cmtSubMap.get(item.CHashId)[idx2].FavoriteCount++;
-                            }
-                            cmtSubMap.get(item.CHashId)[idx2].IsFavorite =
-                              !cmtSubMap.get(item.CHashId)[idx2].IsFavorite;
-                          });
-                        }
-                      "
-                    />
-                  </div>
-                </template>
-              </template>
-              <template v-else>
-                <p
-                  class="hover:cursor-pointer ml-5"
-                  @click="getSubCmtList(item.CHashId)"
-                >
-                  查看{{ item.ChildNum }}条回复
-                </p>
-              </template>
-            </template>
+  <div class="bg-#f1f5f9 w-full">
+    <nav-bar />
+    <template v-if="isLoaded">
+      <div class="flex flex-row w-full min-h-screen justify-center gap-4 pt-10">
+        <div class="flex flex-col gap-8 items-center m-6 mt-20">
+          <template v-for="(item, idx) of infos" :key="idx">
+            <el-badge
+              :value="item.count"
+              color="grey"
+              class="scale-125"
+              :offset="[-5, 3]"
+              :max="99"
+            >
+              <el-button
+                :icon="item.icon"
+                size="large"
+                circle
+                :color="item.color"
+                @click="item.onClick"
+              />
+            </el-badge>
           </template>
         </div>
-      </template>
-    </el-drawer>
-  </template>
-  <template v-else>
-    <p>正在加载中。。。。</p>
-  </template>
+        <div
+          class="flex flex-col items-start gap-4 p-10 w-3/5 bg-white min-h-50 rounded-lg"
+        >
+          <h1 class="text-4xl font-bold">{{ detail.base.preload.title }}</h1>
+          <div class="flex flex-row items-center gap-4">
+            <router-link :to="/user/ + detail.author.base.hashId">{{
+              detail.author.base.name
+            }}</router-link>
+            <div class="flex flex-row items-center">
+              <el-icon> <View /></el-icon>&nbsp; {{ detail.info.viewed_count }}
+            </div>
+          </div>
+          <p class="w-full bg-slate-300 rounded-md min-h-24 p-3">
+            <span class="text-blue-600 italic">小记： </span
+            >{{ detail.base.preload.note }}
+          </p>
+          <QuillEditor
+            theme="bubble"
+            contentType="html"
+            :content="detail.base.content"
+            :readOnly="true"
+          />
+        </div>
+        <div>
+          <user-card
+            :user="detail.author"
+            @click:follow="authorFollow"
+          ></user-card>
+          <template
+            v-if="
+              userStore.user &&
+              userStore.user.base.hashId === detail.author.base.hashId
+            "
+          >
+            <div
+              class="mt-40 py-8 px-4 bg-white flex flex-col items-center gap-2 border-rounded"
+            >
+              <div>
+                <el-button
+                  type="primary"
+                  plain
+                  size="large"
+                  @click="redToModPage"
+                  >修改文章</el-button
+                >
+              </div>
+              <div>
+                <el-button type="danger" plain size="large" @click="delArticle"
+                  >删除文章</el-button
+                >
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+      <el-drawer v-model="cmtDrawerIsOpen" direction="rtl">
+        <template #header>
+          <div
+            class="flex flex-row justify-start items-center p-b-1 border-b-1 border-b-blueGray"
+          >
+            <Comment class="w-7 h-7 mr-4" />
+            <span style="font-size: 25px">评论</span>
+          </div>
+        </template>
+        <template #default>
+          <div class="flex flex-col gap-4 items-start w-full">
+            <comment-input @send="(cmt) => comment(cmt, false)" />
+            <template v-for="(item, idx) of cmtList" :key="idx">
+              <CommentItem
+                :item="item"
+                :uCard="uCardMap.get(item.User.hashId)"
+                :isReply="false"
+                :articleAuthorId="detail.author.base.hashId"
+                @fetch:userCard="
+                  (force: boolean) => fetchUser(item.User.hashId, force)
+                "
+                @post:comment="
+                  (cmt) => {
+                    comment(cmt, true, item.CHashId, item.CHashId);
+                    cmtList[idx].ChildNum++;
+                  }
+                "
+                @update:cmtFavorite="
+                  () => {
+                    cmtFavorite(item).then(() => {
+                      if (cmtList[idx].IsFavorite) {
+                        cmtList[idx].FavoriteCount--;
+                      } else {
+                        cmtList[idx].FavoriteCount++;
+                      }
+                      cmtList[idx].IsFavorite = !cmtList[idx].IsFavorite;
+                    });
+                  }
+                "
+              />
+
+              <template v-if="item.ChildNum > 0">
+                <template v-if="cmtSubMapRelation.get(item.CHashId)">
+                  <template
+                    v-for="(subItem, idx2) of cmtSubMap.get(item.CHashId)"
+                    :key="idx2"
+                  >
+                    <div class="ml-5">
+                      <CommentItem
+                        :item="subItem"
+                        :uCard="uCardMap.get(subItem.User.hashId)"
+                        :isReply="true"
+                        :articleAuthorId="detail.author.base.hashId"
+                        @fetch:userCard="
+                          (force: boolean) =>
+                            fetchUser(subItem.User.hashId, force)
+                        "
+                        @post:comment="
+                          (cmt) =>
+                            comment(cmt, true, subItem.CHashId, item.CHashId)
+                        "
+                        @update:cmtFavorite="
+                          () => {
+                            cmtFavorite(subItem).then(() => {
+                              if (
+                                cmtSubMap.get(item.CHashId)[idx2].IsFavorite
+                              ) {
+                                cmtSubMap.get(item.CHashId)[idx2]
+                                  .FavoriteCount--;
+                              } else {
+                                cmtSubMap.get(item.CHashId)[idx2]
+                                  .FavoriteCount++;
+                              }
+                              cmtSubMap.get(item.CHashId)[idx2].IsFavorite =
+                                !cmtSubMap.get(item.CHashId)[idx2].IsFavorite;
+                            });
+                          }
+                        "
+                      />
+                    </div>
+                  </template>
+                </template>
+                <template v-else>
+                  <p
+                    class="hover:cursor-pointer ml-5"
+                    @click="getSubCmtList(item.CHashId)"
+                  >
+                    查看{{ item.ChildNum }}条回复
+                  </p>
+                </template>
+              </template>
+            </template>
+          </div>
+        </template>
+      </el-drawer>
+    </template>
+    <template v-else>
+      <p>正在加载中。。。。</p>
+    </template>
+  </div>
 </template>
-<style>
+<style scoped>
 .el-drawer__header {
   margin-bottom: 0;
+}
+.el-button {
+  margin-left: 0px;
 }
 </style>

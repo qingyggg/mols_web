@@ -27,6 +27,7 @@ declare module 'vue' {
     ElTabs: typeof import('element-plus/es')['ElTabs']
     ElTag: typeof import('element-plus/es')['ElTag']
     ElUpload: typeof import('element-plus/es')['ElUpload']
+    ImgUpload: typeof import('./components/imgUpload.vue')['default']
     NavBar: typeof import('./components/navBar.vue')['default']
     Popover: typeof import('./components/userPopover.vue')['default']
     PublishList: typeof import('./components/publishList.vue')['default']

@@ -50,8 +50,8 @@ import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import { useAuthStore } from "@/stores/auth";
 import { useRouter } from "vue-router";
 import { useRequest } from "@/hooks/useRequest";
-const ruleFormRef = ref<FormInstance>();
 const { setLoginState } = useAuthStore();
+const ruleFormRef = ref<FormInstance>();
 const request = useRequest();
 const router = useRouter();
 const ruleForm = reactive({

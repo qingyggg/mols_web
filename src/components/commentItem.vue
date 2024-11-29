@@ -29,7 +29,7 @@ const toggleCmtDiaglog = () => {
     <UserPopover
       :user="item.User"
       :fullUser="uCard"
-      @fetch:userCard="emits('fetch:userCard')"
+      @fetch:userCard="(force: boolean) => emits('fetch:userCard', force)"
     />
     <div class="flex flex-col">
       <div class="flex" flex-row gap-2>

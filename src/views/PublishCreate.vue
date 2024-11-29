@@ -13,10 +13,10 @@ const pubForm = ref<{
   note: string;
   cover_url: string;
 }>({ title: "", note: "", cover_url: "" });
-const dialogFormVisible = ref(false);
 const formLabelWidth = "140px";
 const request = useRequest();
 
+const dialogFormVisible = ref(false);
 const openDialog = () => {
   dialogFormVisible.value = true;
 };

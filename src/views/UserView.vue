@@ -1,14 +1,27 @@
 <script lang="ts" setup>
 import { CommonUser } from "@/apis/models";
 import { useRequest } from "@/hooks/useRequest";
+import { useUserStore } from "@/stores/userInfo";
 import { TabsPaneContext } from "element-plus";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 const { uid } = defineProps<{ uid: string }>();
 const user = ref<CommonUser>();
-const activeName = ref<string>('publish');
 const request = useRequest();
-const router=useRouter()
+const router = useRouter();
+const route = useRoute();
+const userStore = useUserStore();
+const activeName = computed(() => {
+  if (route.fullPath.includes("published_list")) {
+    return "published_list";
+  } else if (route.fullPath.includes("follower_list")) {
+    return "follower_list";
+  } else if (route.fullPath.includes("following_list")) {
+    return "following_list";
+  } else {
+    return "published_list";
+  }
+});
 onMounted(() => {
   request.blogServerUserGet(uid).then((res) => {
     if (res.data.user) {
@@ -16,9 +29,23 @@ onMounted(() => {
     }
   });
 });
-const handleClick = (tab: TabsPaneContext,a) => {
-  // router.push(tab.paneName)
-  console.log(tab.paneName)
+watch(
+  () => uid,
+  (uid: string) => {
+    request.blogServerUserGet(uid).then((res) => {
+      if (res.data.user) {
+        user.value = res.data.user;
+      }
+    });
+  },
+);
+const handleClick = (tab: TabsPaneContext) => {
+  if (typeof tab.paneName === "string") {
+    router.push(`/user/${uid}/` + tab.paneName);
+  }
+};
+const redToSettingPage = () => {
+  router.push("/setting/profile_modify");
 };
 </script>
 <template>
@@ -33,7 +60,19 @@ const handleClick = (tab: TabsPaneContext,a) => {
         />
         <div class="w-full p-4 flex flex-col">
           <div class="w-full flex flex-row justify-end relative">
-            <el-button type="primary">编辑个人资料</el-button>
+            <template
+              v-if="
+                userStore.user &&
+                userStore.user.base.hashId === user.base.hashId
+              "
+            >
+              <el-button type="primary" @click="redToSettingPage"
+                >编辑个人资料</el-button
+              >
+            </template>
+            <template v-else>
+              <div class="m-5"></div>
+            </template>
             <el-avatar
               :size="150"
               :src="user.base.profile.avatar"
@@ -55,20 +94,43 @@ const handleClick = (tab: TabsPaneContext,a) => {
             </div>
           </div>
         </div>
-        <div class="w-full p-4">
+        <div class="w-full px-4">
           <el-tabs
             v-model="activeName"
             @tab-click="handleClick"
             :stretch="true"
           >
-            <el-tab-pane label="文章" name="published_list"/>
-            <el-tab-pane label="收藏" name="published_list"/>
-            <el-tab-pane label="关注" name="following_list"/>
-            <el-tab-pane label="关注者" name="follower_list"/>
+            <el-tab-pane label="文章" name="published_list" />
+            <el-tab-pane label="关注" name="following_list" />
+            <el-tab-pane label="关注者" name="follower_list" />
           </el-tabs>
         </div>
+        <router-view v-slot="{ Component }" :key="route.fullPath">
+          <transition name="slide-fade">
+            <keep-alive>
+              <component
+                :is="Component"
+                :view-prop="{ uid: uid, user: user }"
+              />
+            </keep-alive>
+          </transition>
+        </router-view>
       </div>
     </div>
   </div>
 </template>
-<style lang="css" scoped></style>
+<style lang="css" scoped>
+.slide-fade-enter-active {
+  transition: all 0.3s ease-out;
+}
+
+.slide-fade-leave-active {
+  transition: all 0.8s cubic-bezier(1, 0.5, 0.8, 1);
+}
+
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateX(20px);
+  opacity: 0;
+}
+</style>

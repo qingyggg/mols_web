@@ -15,6 +15,8 @@ const publishListReq = async (offset: number) => {
       noMore.value = true;
     }
     pubList.value.push(...res.data.List);
+  } else {
+    noMore.value = true;
   }
 };
 const userReq = (uid: string) => {
@@ -39,14 +41,16 @@ const loadMore = (offset: number) => {
   <div class="bg-#f1f5f9 w-full">
     <nav-bar />
     <div class="w-full flex flex-col items-center">
-      <publish-list
-        :pubList="pubList"
-        v-model:loading="loading"
-        :noMore="noMore"
-        :uCardMap="uCardMap"
-        @fetchList="(offset) => loadMore(offset)"
-        @fetchUCard="(uid) => userReq(uid)"
-      />
+      <div class="w-200">
+        <publish-list
+          :pubList="pubList"
+          :loading="loading"
+          :noMore="noMore"
+          :uCardMap="uCardMap"
+          @fetchList="(offset) => loadMore(offset)"
+          @fetchUCard="(uid) => userReq(uid)"
+        />
+      </div>
     </div>
   </div>
 </template>

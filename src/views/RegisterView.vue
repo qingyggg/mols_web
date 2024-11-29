@@ -10,7 +10,6 @@
         status-icon
         :rules="rules"
         label-width="auto"
-        class="demo-ruleForm"
         label-position="left"
         size="large"
       >

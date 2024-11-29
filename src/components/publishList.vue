@@ -8,10 +8,11 @@ import {
   View,
 } from "@element-plus/icons-vue";
 import { useRouter } from "vue-router";
-const { noMore, pubList, uCardMap } = defineProps<{
+const { noMore, pubList, uCardMap, loading } = defineProps<{
   noMore: boolean;
   pubList: Array<CommonArticleCard>;
   uCardMap: Map<string, CommonUser>;
+  loading: boolean;
 }>();
 let offset = 0;
 const emits = defineEmits<{
@@ -19,9 +20,8 @@ const emits = defineEmits<{
   fetchUCard: [uid: string];
 }>();
 const router = useRouter();
-const loading = defineModel<boolean>();
 const loadMore = () => {
-  if (loading.value) {
+  if (loading) {
     return; //避免重复请求
   }
   emits("fetchList", offset);
@@ -36,11 +36,11 @@ const detailRed = (aid: string, uid: string) => {
     v-infinite-scroll="loadMore"
     infinite-scroll-delay="1000"
     :infinite-scroll-disabled="noMore"
-    class="list-none h-200 overflow-y-auto rounded-md"
+    class="list-none h-200 overflow-y-auto rounded-md w-full"
   >
-    <li v-for="(item, index) in pubList" :key="index">
-      <div class="w-200 py-3 px-5 bg-white">
-        <div class="flex flex-row justify-between items-center">
+    <li v-for="(item, index) in pubList" :key="index" class="w-full">
+      <div class="w-full py-3 px-3 bg-white">
+        <div class="flex flex-row justify-between items-center px-2">
           <div class="flex flex-col gap-2">
             <div class="flex flex-row gap-3">
               <UserPopover
@@ -102,7 +102,7 @@ const detailRed = (aid: string, uid: string) => {
         <div class="border-t-1 border-slate-300 w-full mt-2"></div>
       </div>
     </li>
-    <li v-if="noMore">No more...</li>
+    <li v-if="noMore" class="px-3">没有更多了。。。</li>
   </ul>
 </template>
 <style scoped></style>
