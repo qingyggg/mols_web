@@ -10,7 +10,7 @@ import type {
 } from "element-plus";
 import { useRouter } from "vue-router";
 import { getFileName } from "@/utils/common";
-
+import { fileUploadUrl } from "@/utils/constants";
 const { aid, uid } = defineProps<{
   aid: string;
   uid: string;
@@ -119,7 +119,7 @@ onMounted(async () => {
       <el-form-item label="上传背景图片" :label-width="formLabelWidth">
         <el-upload
           ref="upload"
-          action="https://mols.site/upload/file"
+          :action="fileUploadUrl"
           :limit="1"
           :on-exceed="handleExceed"
           :auto-upload="false"

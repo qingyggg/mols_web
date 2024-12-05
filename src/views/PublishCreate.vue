@@ -4,6 +4,7 @@ import { ref } from "vue";
 import { genFileId } from "element-plus";
 import type { UploadInstance, UploadProps, UploadRawFile } from "element-plus";
 import { useRouter } from "vue-router";
+import { fileUploadUrl } from "@/utils/constants";
 
 const router = useRouter();
 const upload = ref<UploadInstance>();
@@ -93,7 +94,7 @@ const publish = () => {
       <el-form-item label="上传背景图片" :label-width="formLabelWidth">
         <el-upload
           ref="upload"
-          action="https://mols.site/upload/file"
+          :action="fileUploadUrl"
           :limit="1"
           :on-exceed="handleExceed"
           :auto-upload="false"

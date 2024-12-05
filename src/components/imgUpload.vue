@@ -7,7 +7,7 @@ import {
   UploadUserFile,
   genFileId,
 } from "element-plus";
-
+import { fileUploadUrl } from "@/utils/constants";
 const fileList = ref<UploadUserFile[]>([]);
 const { fileUrl } = defineProps<{ fileUrl: string }>();
 const emits = defineEmits<{ submit: [url: string] }>();
@@ -46,7 +46,7 @@ onMounted(() => {
 <template>
   <el-upload
     ref="upload"
-    action="https://mols.site/upload/file"
+    :action="fileUploadUrl"
     :limit="1"
     :on-exceed="handleExceed"
     :auto-upload="false"
