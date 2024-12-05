@@ -50,5 +50,5 @@ export const useRequest = () => {
     );
     isRegistered = true;
   }
-  return DefaultApiFactory(undefined, "https://api.marisa.site", axiosInstance);
+  return DefaultApiFactory(undefined, "https://mols.site/blog_server", axiosInstance);
 };

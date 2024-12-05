@@ -29,15 +29,11 @@ declare module 'vue' {
     ElUpload: typeof import('element-plus/es')['ElUpload']
     ImgUpload: typeof import('./components/imgUpload.vue')['default']
     NavBar: typeof import('./components/navBar.vue')['default']
-    Popover: typeof import('./components/userPopover.vue')['default']
     PublishList: typeof import('./components/publishList.vue')['default']
-    PubList: typeof import('./components/publishList.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
-    TheWelcome: typeof import('./components/TheWelcome.vue')['default']
     UserCard: typeof import('./components/userCard.vue')['default']
     UserPopover: typeof import('./components/userPopover.vue')['default']
-    WelcomeItem: typeof import('./components/WelcomeItem.vue')['default']
   }
   export interface ComponentCustomProperties {
     vInfiniteScroll: typeof import('element-plus/es')['ElInfiniteScroll']
