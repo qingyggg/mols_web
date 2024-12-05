@@ -1,1 +1,1 @@
-export const fileUploadUrl="https://mols.site/blog_server/upload/file"
+export const fileUploadUrl="https://mols.site/upload/file"
