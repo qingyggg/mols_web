@@ -119,7 +119,7 @@ onMounted(async () => {
       <el-form-item label="上传背景图片" :label-width="formLabelWidth">
         <el-upload
           ref="upload"
-          action="https://api.marisa.site/upload/file"
+          action="https://mols.site/upload/file"
           :limit="1"
           :on-exceed="handleExceed"
           :auto-upload="false"
